@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Dark Background -->
+  <rect width="512" height="512" rx="112" fill="#0f172a" />
+  <!-- Green Gradient Accent -->
+  <defs>
+    <linearGradient id="greenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+  </defs>
+  <!-- Calendar Top Header -->
+  <path d="M128 160h256v64H128z" fill="url(#greenGrad)" />
+  <!-- Calendar Rings -->
+  <rect x="160" y="112" width="24" height="64" rx="12" fill="#e2e8f0" />
+  <rect x="328" y="112" width="24" height="64" rx="12" fill="#e2e8f0" />
+  <!-- Calendar Body -->
+  <path d="M128 224h256v160c0 17.67-14.33 32-32 32H160c-17.67 0-32-14.33-32-32V224z" fill="#1e293b" />
+  <!-- Chart Line (Upward Trend) -->
+  <path d="M176 352l48-64 48 32 80-96" fill="none" stroke="#10b981" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" />
+  <!-- Arrow Head -->
+  <path d="M312 224h40v40" fill="none" stroke="#10b981" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" />
+  <!-- Candlesticks -->
+  <rect x="212" y="272" width="12" height="40" fill="#10b981" />
+  <rect x="216" y="256" width="4" height="72" fill="#10b981" />
+  
+  <rect x="272" y="288" width="12" height="40" fill="#ef4444" />
+  <rect x="276" y="272" width="4" height="72" fill="#ef4444" />
+</svg>
