@@ -14,6 +14,14 @@ import {
   isSameDay,
   isSameWeek,
 } from 'date-fns'
+import { db } from './firebase'
+import {
+  collection,
+  doc,
+  setDoc,
+  deleteDoc,
+  onSnapshot,
+} from 'firebase/firestore'
 import CalendarGrid from './components/CalendarGrid'
 import WeeklySummary from './components/WeeklySummary'
 import TradeModal from './components/TradeModal'
@@ -26,7 +34,6 @@ const GOOGLE_CLIENT_ID =
   import.meta.env.VITE_GOOGLE_CLIENT_ID ||
   '184032797083-uucbkrab0lad52mlmp6gk0calca2lvcc.apps.googleusercontent.com'
 
-const TRADES_STORAGE_KEY = 'calendar-journal-trades'
 const USER_STORAGE_KEY = 'tradejournal-user'
 
 function loadUser() {
@@ -38,30 +45,65 @@ function loadUser() {
   }
 }
 
-function loadTrades() {
-  try {
-    const d = localStorage.getItem(TRADES_STORAGE_KEY)
-    return d ? JSON.parse(d) : []
-  } catch {
-    return []
-  }
-}
-
 export default function App() {
   // ── Auth State Management ──────────────────────────────────────
   const [user, setUser] = useState(loadUser)
 
-  // ── Trading Journal States ─────────────────────────────────────
-  const [trades, setTrades] = useState(loadTrades)
+  // ── Trading Journal States (Synced with Firestore) ─────────────
+  const [trades, setTrades] = useState([])
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [modalDate, setModalDate] = useState(null)
   const [selectedWeekNum, setSelectedWeekNum] = useState(null)
   const [editTrade, setEditTrade] = useState(null)
 
-  // Persist trades to LocalStorage whenever trades state updates
+  // ── Sync Trades with Firebase Firestore ────────────────────────
   useEffect(() => {
-    localStorage.setItem(TRADES_STORAGE_KEY, JSON.stringify(trades))
-  }, [trades])
+    // Only fetch trades AFTER Google Login succeeds and user.email is available
+    if (!user || !user.email) {
+      setTrades([])
+      return
+    }
+
+    const tradesCollectionRef = collection(db, 'users', user.email, 'trades')
+
+    // One-time legacy LocalStorage migration to Firestore if exists
+    try {
+      const legacyTradesRaw = localStorage.getItem('calendar-journal-trades')
+      if (legacyTradesRaw) {
+        const legacyTrades = JSON.parse(legacyTradesRaw)
+        if (Array.isArray(legacyTrades) && legacyTrades.length > 0) {
+          legacyTrades.forEach((legacyTrade) => {
+            const id = legacyTrade.id || crypto.randomUUID()
+            setDoc(
+              doc(db, 'users', user.email, 'trades', id),
+              { ...legacyTrade, id },
+              { merge: true }
+            ).catch(() => {})
+          })
+        }
+        localStorage.removeItem('calendar-journal-trades')
+      }
+    } catch (err) {
+      console.warn('Legacy migration notice:', err)
+    }
+
+    // Subscribe to real-time changes in Firestore
+    const unsubscribe = onSnapshot(
+      tradesCollectionRef,
+      (snapshot) => {
+        const remoteTrades = snapshot.docs.map((docSnap) => ({
+          id: docSnap.id,
+          ...docSnap.data(),
+        }))
+        setTrades(remoteTrades)
+      },
+      (error) => {
+        console.error('Firestore onSnapshot error:', error)
+      }
+    )
+
+    return () => unsubscribe()
+  }, [user?.email])
 
   // ── Auth Handlers ──────────────────────────────────────────────
   const handleLoginSuccess = useCallback((profile) => {
@@ -76,6 +118,7 @@ export default function App() {
     }
     localStorage.removeItem(USER_STORAGE_KEY)
     setUser(null)
+    setTrades([]) // Clear trades state so data doesn't bleed over
   }, [])
 
   // ── Month Navigation ───────────────────────────────────────────
@@ -181,22 +224,57 @@ export default function App() {
     return weeksList.find((w) => w.weekNum === selectedWeekNum) || null
   }, [weeksList, selectedWeekNum])
 
-  // ── Trade CRUD Operations ──────────────────────────────────────
-  const handleSaveTrade = useCallback((trade) => {
-    if (trade.id) {
-      setTrades((prev) => prev.map((t) => (t.id === trade.id ? trade : t)))
-      setEditTrade(null)
-    } else {
-      setTrades((prev) => [...prev, { ...trade, id: crypto.randomUUID() }])
-    }
-  }, [])
+  // ── Trade CRUD Operations via Firebase Firestore ──────────────
+  const handleSaveTrade = useCallback(
+    async (trade) => {
+      if (!user || !user.email) return
 
-  const handleDeleteTrade = useCallback((id) => {
-    setTrades((prev) => prev.filter((t) => t.id !== id))
-    if (editTrade && editTrade.id === id) {
+      const tradeId = trade.id || crypto.randomUUID()
+      const tradeData = {
+        ...trade,
+        id: tradeId,
+        updatedAt: new Date().toISOString(),
+      }
+
+      // Optimistic UI update for immediate feedback
+      setTrades((prev) => {
+        const exists = prev.some((t) => t.id === tradeId)
+        if (exists) {
+          return prev.map((t) => (t.id === tradeId ? tradeData : t))
+        }
+        return [...prev, tradeData]
+      })
       setEditTrade(null)
-    }
-  }, [editTrade])
+
+      try {
+        const tradeDocRef = doc(db, 'users', user.email, 'trades', tradeId)
+        await setDoc(tradeDocRef, tradeData, { merge: true })
+      } catch (error) {
+        console.error('Error saving trade to Firestore:', error)
+      }
+    },
+    [user?.email]
+  )
+
+  const handleDeleteTrade = useCallback(
+    async (id) => {
+      if (!user || !user.email || !id) return
+
+      // Optimistic UI update
+      setTrades((prev) => prev.filter((t) => t.id !== id))
+      if (editTrade && editTrade.id === id) {
+        setEditTrade(null)
+      }
+
+      try {
+        const tradeDocRef = doc(db, 'users', user.email, 'trades', id)
+        await deleteDoc(tradeDocRef)
+      } catch (error) {
+        console.error('Error deleting trade from Firestore:', error)
+      }
+    },
+    [user?.email, editTrade]
+  )
 
   // ── Trades for the active Day Details Modal ───────────────────
   const tradesForModalDate = useMemo(() => {
@@ -289,7 +367,7 @@ export default function App() {
 
         {/* ── App Footer ───────────────────────────────────────── */}
         <footer className="border-t border-gray-800/60 py-3 text-center text-[11px] sm:text-xs text-gray-500 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
-          TradeJournal &middot; Authenticated as {user.email || user.name} &middot; Data stored in your browser
+          TradeJournal &middot; Authenticated as {user.email || user.name} &middot; Synced with Firebase Cloud Firestore
         </footer>
       </div>
     </GoogleOAuthProvider>
