@@ -3,27 +3,29 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>TradeJournal — Trading PnL Calendar</title>
+    <title>Trading PnL Journal</title>
 
-    <!-- PWA Web App Manifest -->
-    <link rel="manifest" href="/manifest.json" />
+    <!-- PWA Web App Manifest (v=4 cache buster) -->
+    <link rel="manifest" href="/manifest.json?v=4">
 
-    <!-- iOS "Add to Home Screen" App Icon & Standalone Mode Configuration -->
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="TradeJournal" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png">
+    <!-- iOS Native App Mode & Standalone Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="TradeJournal">
 
-    <!-- Favicon & App Icon -->
-    <link rel="icon" type="image/png" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/svg+xml" href="/icon.svg">
+    <!-- iOS Home Screen App Icon (v=4 cache buster to override aggressive iOS cache) -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=4">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=4">
+    <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png?v=4">
 
-    <!-- Mobile Theme & Capabilities -->
-    <meta name="theme-color" content="#0a0d13" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="format-detection" content="telephone=no" />
+    <!-- Standard Favicon & Vector App Icon -->
+    <link rel="icon" type="image/png" href="/apple-touch-icon.png?v=4">
+    <link rel="icon" type="image/svg+xml" href="/icon.svg?v=4">
+
+    <!-- Mobile Navigation & Theme Capabilities -->
+    <meta name="theme-color" content="#0a0d13">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
     <script type="module" crossorigin src="/assets/index-CzuDU5lM.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-CkbBSjE9.css">
   </head>
