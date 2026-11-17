@@ -69,3 +69,10 @@ select option {
   background: #0e1219;
   color: #e5e7eb;
 }
+
+/* Google Identity Services button iframe: prevent white background box in dark mode */
+iframe[src*="accounts.google.com"],
+div:has(> iframe[src*="accounts.google.com"]) {
+  color-scheme: light;
+  background-color: transparent !important;
+}

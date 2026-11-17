@@ -31,6 +31,8 @@ export default function LoginScreen({ onLoginSuccess }) {
     }
   }
 
+  const handleLoginSuccess = handleGoogleSuccess
+
   const handleGoogleError = () => {
     setError('Google Sign-In failed or was closed. Please try again.')
   }
@@ -74,13 +76,12 @@ export default function LoginScreen({ onLoginSuccess }) {
           </div>
         )}
 
-        {/* Google Sign In Button - Clean layout wrapper without background or extra padding */}
-        <div className="flex justify-center w-full">
+        <div className="flex justify-center w-full my-6 bg-transparent border-none">
           <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={handleGoogleError}
+            onSuccess={handleLoginSuccess} /* Make sure to use the correct existing handler name */
+            onError={() => console.log('Login Failed')}
             theme="filled_black"
-            shape="rectangular"
+            shape="pill"
             size="large"
             text="signin_with"
           />
