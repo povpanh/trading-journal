@@ -8,6 +8,7 @@ import {
   BarChart3,
   Activity,
   Target,
+  LogOut,
 } from 'lucide-react'
 import { formatPnL, getPnLTextColor } from '../utils/formatters'
 
@@ -17,6 +18,8 @@ export default function MonthlyHeader({
   onNext,
   onToday,
   stats,
+  user,
+  onLogout,
 }) {
   const { totalPnl, tradingDays, totalTrades, winRate } = stats
   const isLoss = totalPnl < 0
@@ -25,7 +28,7 @@ export default function MonthlyHeader({
   return (
     <header className="border-b border-gray-800/60 bg-[#0e1219]/95 backdrop-blur-md sticky top-0 z-30">
       <div className="mx-auto max-w-[1440px] px-3 py-3 sm:px-6 sm:py-4 lg:px-8 space-y-3 sm:space-y-4">
-        {/* Row 1: Brand & Month Navigation */}
+        {/* Row 1: Brand, Month Navigation & User Controls */}
         <div className="flex items-center justify-between gap-2 flex-wrap">
           {/* Brand */}
           <div className="flex items-center gap-2 sm:gap-2.5">
@@ -37,8 +40,9 @@ export default function MonthlyHeader({
             </span>
           </div>
 
-          {/* Month Navigator & Today Button */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Controls: Month Nav, Today & User Avatar/Logout */}
+          <div className="flex items-center gap-1.5 sm:gap-2.5 flex-wrap">
+            {/* Month Navigator */}
             <div className="flex items-center gap-0.5 sm:gap-1 rounded-lg border border-gray-800 bg-[#0a0d13] p-0.5 sm:p-1">
               <button
                 onClick={onPrev}
@@ -48,7 +52,7 @@ export default function MonthlyHeader({
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
-              <span className="min-w-[120px] sm:min-w-[150px] text-center text-xs sm:text-sm font-semibold text-gray-100 select-none">
+              <span className="min-w-[110px] sm:min-w-[150px] text-center text-xs sm:text-sm font-semibold text-gray-100 select-none">
                 {format(currentMonth, 'MMMM yyyy')}
               </span>
               <button
@@ -61,12 +65,47 @@ export default function MonthlyHeader({
               </button>
             </div>
 
+            {/* Today Button */}
             <button
               onClick={onToday}
               className="rounded-lg border border-gray-700 bg-transparent px-2.5 py-1.5 text-xs font-semibold text-gray-300 hover:border-emerald-500/50 hover:text-emerald-400 transition-colors cursor-pointer active:scale-95"
             >
               Today
             </button>
+
+            {/* User Profile & Logout */}
+            {user && (
+              <div className="flex items-center gap-1.5 sm:gap-2 pl-1 sm:pl-2 border-l border-gray-800">
+                {user.picture ? (
+                  <img
+                    src={user.picture}
+                    alt={user.name}
+                    referrerPolicy="no-referrer"
+                    className="h-7 w-7 rounded-full border border-emerald-500/30 object-cover"
+                  />
+                ) : (
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold">
+                    {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                )}
+
+                <span
+                  className="hidden md:inline text-xs font-medium text-gray-300 max-w-[110px] truncate"
+                  title={user.email || user.name}
+                >
+                  {user.name}
+                </span>
+
+                <button
+                  onClick={onLogout}
+                  className="flex items-center gap-1 rounded-lg border border-gray-700/80 bg-[#0a0d13] px-2 sm:px-2.5 py-1.5 text-xs font-semibold text-gray-400 hover:border-red-500/50 hover:bg-red-500/10 hover:text-red-400 transition-colors cursor-pointer active:scale-95"
+                  title="Sign out of your account"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Logout</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

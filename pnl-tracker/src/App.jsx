@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import { GoogleOAuthProvider, googleLogout } from '@react-oauth/google'
 import {
   format,
   startOfMonth,
@@ -18,12 +19,27 @@ import WeeklySummary from './components/WeeklySummary'
 import TradeModal from './components/TradeModal'
 import WeeklyModal from './components/WeeklyModal'
 import MonthlyHeader from './components/MonthlyHeader'
+import LoginScreen from './components/LoginScreen'
 
-const STORAGE_KEY = 'calendar-journal-trades'
+// Google OAuth Client ID (replace 'PASTE_YOUR_CLIENT_ID_HERE' with your Google Client ID, or set VITE_GOOGLE_CLIENT_ID)
+const GOOGLE_CLIENT_ID =
+  import.meta.env.VITE_GOOGLE_CLIENT_ID || 'PASTE_YOUR_CLIENT_ID_HERE'
+
+const TRADES_STORAGE_KEY = 'calendar-journal-trades'
+const USER_STORAGE_KEY = 'tradejournal-user'
+
+function loadUser() {
+  try {
+    const data = localStorage.getItem(USER_STORAGE_KEY)
+    return data ? JSON.parse(data) : null
+  } catch {
+    return null
+  }
+}
 
 function loadTrades() {
   try {
-    const d = localStorage.getItem(STORAGE_KEY)
+    const d = localStorage.getItem(TRADES_STORAGE_KEY)
     return d ? JSON.parse(d) : []
   } catch {
     return []
@@ -31,6 +47,10 @@ function loadTrades() {
 }
 
 export default function App() {
+  // ── Auth State Management ──────────────────────────────────────
+  const [user, setUser] = useState(loadUser)
+
+  // ── Trading Journal States ─────────────────────────────────────
   const [trades, setTrades] = useState(loadTrades)
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [modalDate, setModalDate] = useState(null)
@@ -39,8 +59,23 @@ export default function App() {
 
   // Persist trades to LocalStorage whenever trades state updates
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(trades))
+    localStorage.setItem(TRADES_STORAGE_KEY, JSON.stringify(trades))
   }, [trades])
+
+  // ── Auth Handlers ──────────────────────────────────────────────
+  const handleLoginSuccess = useCallback((profile) => {
+    setUser(profile)
+  }, [])
+
+  const handleLogout = useCallback(() => {
+    try {
+      googleLogout()
+    } catch (e) {
+      // ignore
+    }
+    localStorage.removeItem(USER_STORAGE_KEY)
+    setUser(null)
+  }, [])
 
   // ── Month Navigation ───────────────────────────────────────────
   const goNext = () => setCurrentMonth((m) => addMonths(m, 1))
@@ -170,77 +205,95 @@ export default function App() {
       .sort((a, b) => b.pnl - a.pnl)
   }, [trades, modalDate])
 
+  // ── Render Login Screen if user is not authenticated ──────────
+  if (!user) {
+    return (
+      <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+        <LoginScreen
+          onLoginSuccess={handleLoginSuccess}
+          isConfigured={
+            GOOGLE_CLIENT_ID !== 'PASTE_YOUR_CLIENT_ID_HERE' &&
+            GOOGLE_CLIENT_ID !== 'YOUR_GOOGLE_CLIENT_ID'
+          }
+        />
+      </GoogleOAuthProvider>
+    )
+  }
+
+  // ── Render Protected Dashboard when logged in ──────────────────
   return (
-    <div className="min-h-screen bg-[#0a0d13] text-gray-100 flex flex-col font-sans selection:bg-emerald-500/30">
-      {/* ── Top Header with Monthly Stats ─────────────────────── */}
-      <MonthlyHeader
-        currentMonth={currentMonth}
-        onPrev={goPrev}
-        onNext={goNext}
-        onToday={goToday}
-        stats={monthlyStats}
-      />
-
-      {/* ── Main App Container: Responsive Grid ───────────────── */}
-      {/* On desktop (md: and above): side-by-side (Calendar left, Weekly right) */}
-      {/* On mobile (<md:): stacked vertically (Header -> Calendar -> Weekly) */}
-      <main className="flex-1 mx-auto w-full max-w-[1440px] px-2.5 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5">
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_270px] lg:grid-cols-[1fr_310px] gap-3.5 sm:gap-5 items-start">
-          {/* Main 7-Column Calendar Grid */}
-          <section aria-label="Trading Calendar" className="w-full min-w-0">
-            <CalendarGrid
-              days={calendarDays}
-              currentMonth={currentMonth}
-              dayStats={dayStats}
-              onDayClick={(date) => {
-                setEditTrade(null)
-                setModalDate(date)
-              }}
-            />
-          </section>
-
-          {/* Weekly Summary: Sidebar on Desktop, Bottom Section on Mobile */}
-          <aside aria-label="Weekly Performance Summary" className="w-full min-w-0">
-            <WeeklySummary
-              weeksList={weeksList}
-              onSelectWeek={(weekItem) => setSelectedWeekNum(weekItem.weekNum)}
-              monthlyPnl={monthlyStats.totalPnl}
-              monthlyTradingDays={monthlyStats.tradingDays}
-            />
-          </aside>
-        </div>
-      </main>
-
-      {/* ── Day Details Modal (Trade Notes, Setups, Add/Edit) ──── */}
-      {modalDate && (
-        <TradeModal
-          date={modalDate}
-          trades={tradesForModalDate}
-          editTrade={editTrade}
-          onSave={handleSaveTrade}
-          onDelete={handleDeleteTrade}
-          onEdit={setEditTrade}
-          onClose={() => {
-            setModalDate(null)
-            setEditTrade(null)
-          }}
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <div className="min-h-screen bg-[#0a0d13] text-gray-100 flex flex-col font-sans selection:bg-emerald-500/30">
+        {/* ── Top Header with Monthly Stats & User Profile ─────── */}
+        <MonthlyHeader
+          currentMonth={currentMonth}
+          onPrev={goPrev}
+          onNext={goNext}
+          onToday={goToday}
+          stats={monthlyStats}
+          user={user}
+          onLogout={handleLogout}
         />
-      )}
 
-      {/* ── Weekly Details Modal (Clicking ANY week in sidebar) ── */}
-      {selectedWeekInfo && (
-        <WeeklyModal
-          weekInfo={selectedWeekInfo}
-          onSaveTrade={handleSaveTrade}
-          onDeleteTrade={handleDeleteTrade}
-          onClose={() => setSelectedWeekNum(null)}
-        />
-      )}
+        {/* ── Main App Container: Responsive Grid ───────────────── */}
+        <main className="flex-1 mx-auto w-full max-w-[1440px] px-2.5 py-3 sm:px-4 sm:py-4 md:px-6 md:py-5">
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_270px] lg:grid-cols-[1fr_310px] gap-3.5 sm:gap-5 items-start">
+            {/* Main 7-Column Calendar Grid */}
+            <section aria-label="Trading Calendar" className="w-full min-w-0">
+              <CalendarGrid
+                days={calendarDays}
+                currentMonth={currentMonth}
+                dayStats={dayStats}
+                onDayClick={(date) => {
+                  setEditTrade(null)
+                  setModalDate(date)
+                }}
+              />
+            </section>
 
-      {/* ── App Footer ───────────────────────────────────────── */}
-      <footer className="border-t border-gray-800/60 py-3 text-center text-[11px] sm:text-xs text-gray-500 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
-        TradeJournal &middot; Calendar PnL Journal &middot; iOS PWA Ready
-      </footer>
-    </div>
+            {/* Weekly Summary: Sidebar on Desktop, Bottom Section on Mobile */}
+            <aside aria-label="Weekly Performance Summary" className="w-full min-w-0">
+              <WeeklySummary
+                weeksList={weeksList}
+                onSelectWeek={(weekItem) => setSelectedWeekNum(weekItem.weekNum)}
+                monthlyPnl={monthlyStats.totalPnl}
+                monthlyTradingDays={monthlyStats.tradingDays}
+              />
+            </aside>
+          </div>
+        </main>
+
+        {/* ── Day Details Modal (Trade Notes, Setups, Add/Edit) ──── */}
+        {modalDate && (
+          <TradeModal
+            date={modalDate}
+            trades={tradesForModalDate}
+            editTrade={editTrade}
+            onSave={handleSaveTrade}
+            onDelete={handleDeleteTrade}
+            onEdit={setEditTrade}
+            onClose={() => {
+              setModalDate(null)
+              setEditTrade(null)
+            }}
+          />
+        )}
+
+        {/* ── Weekly Details Modal (Clicking ANY week in sidebar) ── */}
+        {selectedWeekInfo && (
+          <WeeklyModal
+            weekInfo={selectedWeekInfo}
+            onSaveTrade={handleSaveTrade}
+            onDeleteTrade={handleDeleteTrade}
+            onClose={() => setSelectedWeekNum(null)}
+          />
+        )}
+
+        {/* ── App Footer ───────────────────────────────────────── */}
+        <footer className="border-t border-gray-800/60 py-3 text-center text-[11px] sm:text-xs text-gray-500 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
+          TradeJournal &middot; Authenticated as {user.email || user.name} &middot; Data stored in your browser
+        </footer>
+      </div>
+    </GoogleOAuthProvider>
   )
 }
