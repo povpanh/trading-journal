@@ -11,16 +11,16 @@
   "theme_color": "#0a0d13",
   "icons": [
     {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
       "src": "/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
-    },
-    {
-      "src": "/apple-touch-icon.png",
-      "sizes": "180x180",
-      "type": "image/png",
-      "purpose": "any"
     },
     {
       "src": "/icon-192.png",
@@ -41,4 +41,3 @@
     "utilities"
   ]
 }
-
