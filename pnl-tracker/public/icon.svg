@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+    <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="16" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- App Icon Background -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)" />
+  <rect width="504" height="504" x="4" y="4" rx="108" fill="none" stroke="#1e293b" stroke-width="4" />
+
+  <!-- Outer Glow Circle -->
+  <circle cx="256" cy="256" r="160" fill="#10b981" opacity="0.12" filter="url(#glow)" />
+
+  <!-- Calendar Base -->
+  <rect x="116" y="146" width="280" height="250" rx="36" fill="#111827" stroke="#334155" stroke-width="8" />
+  
+  <!-- Calendar Top Header Bar -->
+  <path d="M 116 182 C 116 162, 132 146, 152 146 L 360 146 C 380 146, 396 162, 396 182 L 396 210 L 116 210 Z" fill="url(#emeraldGrad)" />
+
+  <!-- Binder Rings -->
+  <rect x="180" y="120" width="16" height="52" rx="8" fill="#e2e8f0" />
+  <rect x="316" y="120" width="16" height="52" rx="8" fill="#e2e8f0" />
+
+  <!-- Bullish Candlestick / Upward Trend Graph inside Calendar -->
+  <path d="M 170 340 L 220 290 L 270 315 L 340 240" fill="none" stroke="url(#emeraldGrad)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />
+  
+  <!-- Trend arrow head -->
+  <path d="M 314 240 L 340 240 L 340 266" fill="none" stroke="#34d399" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Candlestick bar 1 -->
+  <line x1="200" y1="260" x2="200" y2="350" stroke="#10b981" stroke-width="4" stroke-linecap="round" />
+  <rect x="192" y="280" width="16" height="50" rx="4" fill="#10b981" />
+
+  <!-- Candlestick bar 2 (bullish) -->
+  <line x1="260" y1="240" x2="260" y2="360" stroke="#10b981" stroke-width="4" stroke-linecap="round" />
+  <rect x="252" y="260" width="16" height="70" rx="4" fill="#34d399" />
+</svg>
+
