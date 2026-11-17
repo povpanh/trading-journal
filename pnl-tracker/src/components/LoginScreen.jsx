@@ -10,9 +10,10 @@ export default function LoginScreen({ onLoginSuccess }) {
     try {
       if (credentialResponse.credential) {
         const decoded = jwtDecode(credentialResponse.credential)
+        const rawEmail = decoded.email || ''
         const userProfile = {
           name: decoded.name || 'Trader',
-          email: decoded.email || '',
+          email: rawEmail ? rawEmail.trim().toLowerCase() : '',
           picture: decoded.picture || '',
           given_name: decoded.given_name || '',
           family_name: decoded.family_name || '',

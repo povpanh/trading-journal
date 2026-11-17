@@ -39,7 +39,12 @@ const USER_STORAGE_KEY = 'tradejournal-user'
 function loadUser() {
   try {
     const data = localStorage.getItem(USER_STORAGE_KEY)
-    return data ? JSON.parse(data) : null
+    if (!data) return null
+    const parsed = JSON.parse(data)
+    if (parsed && parsed.email) {
+      parsed.email = parsed.email.trim().toLowerCase()
+    }
+    return parsed
   } catch {
     return null
   }
@@ -93,7 +98,9 @@ export default function App() {
               doc(db, 'users', user.email, 'trades', id),
               { ...legacyTrade, id },
               { merge: true }
-            ).catch(() => {})
+            ).catch((error) => {
+              console.error("Firestore Write Failed:", error)
+            })
           })
         }
         localStorage.removeItem('calendar-journal-trades')
@@ -102,7 +109,7 @@ export default function App() {
       console.warn('Legacy migration notice:', err)
     }
 
-    // Subscribe to real-time changes in Firestore
+    // Subscribe to real-time changes in Firestore via onSnapshot
     const unsubscribe = onSnapshot(
       tradesCollectionRef,
       (snapshot) => {
@@ -113,7 +120,7 @@ export default function App() {
         setTrades(remoteTrades)
       },
       (error) => {
-        console.error('Firestore onSnapshot error:', error)
+        console.error("Firestore onSnapshot error:", error)
       }
     )
 
@@ -122,6 +129,9 @@ export default function App() {
 
   // ── Auth Handlers ──────────────────────────────────────────────
   const handleLoginSuccess = useCallback((profile) => {
+    if (profile && profile.email) {
+      profile.email = profile.email.trim().toLowerCase()
+    }
     setUser(profile)
   }, [])
 
@@ -242,7 +252,10 @@ export default function App() {
   // ── Trade CRUD Operations via Firebase Firestore ──────────────
   const handleSaveTrade = useCallback(
     async (trade) => {
-      if (!user || !user.email) return
+      if (!user || !user.email) {
+        console.warn('Cannot save trade: user is not logged in or email is missing.')
+        return
+      }
 
       const tradeId = trade.id || crypto.randomUUID()
       const tradeData = {
@@ -251,21 +264,14 @@ export default function App() {
         updatedAt: new Date().toISOString(),
       }
 
-      // Optimistic UI update for immediate feedback
-      setTrades((prev) => {
-        const exists = prev.some((t) => t.id === tradeId)
-        if (exists) {
-          return prev.map((t) => (t.id === tradeId ? tradeData : t))
-        }
-        return [...prev, tradeData]
-      })
       setEditTrade(null)
 
       try {
+        // Direct cloud write to Firestore - local React state updates automatically via real-time onSnapshot listener
         const tradeDocRef = doc(db, 'users', user.email, 'trades', tradeId)
         await setDoc(tradeDocRef, tradeData, { merge: true })
       } catch (error) {
-        console.error('Error saving trade to Firestore:', error)
+        console.error("Firestore Write Failed:", error)
       }
     },
     [user?.email]
@@ -273,19 +279,21 @@ export default function App() {
 
   const handleDeleteTrade = useCallback(
     async (id) => {
-      if (!user || !user.email || !id) return
+      if (!user || !user.email || !id) {
+        console.warn('Cannot delete trade: user is not logged in or trade id is missing.')
+        return
+      }
 
-      // Optimistic UI update
-      setTrades((prev) => prev.filter((t) => t.id !== id))
       if (editTrade && editTrade.id === id) {
         setEditTrade(null)
       }
 
       try {
+        // Direct cloud write to Firestore - local React state updates automatically via real-time onSnapshot listener
         const tradeDocRef = doc(db, 'users', user.email, 'trades', id)
         await deleteDoc(tradeDocRef)
       } catch (error) {
-        console.error('Error deleting trade from Firestore:', error)
+        console.error("Firestore Write Failed:", error)
       }
     },
     [user?.email, editTrade]
