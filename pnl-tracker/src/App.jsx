@@ -21,9 +21,10 @@ import WeeklyModal from './components/WeeklyModal'
 import MonthlyHeader from './components/MonthlyHeader'
 import LoginScreen from './components/LoginScreen'
 
-// Google OAuth Client ID (replace 'PASTE_YOUR_CLIENT_ID_HERE' with your Google Client ID, or set VITE_GOOGLE_CLIENT_ID)
+// Google OAuth Client ID
 const GOOGLE_CLIENT_ID =
-  import.meta.env.VITE_GOOGLE_CLIENT_ID || 'PASTE_YOUR_CLIENT_ID_HERE'
+  import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+  '184032797083-uucbkrab0lad52mlmp6gk0calca2lvcc.apps.googleusercontent.com'
 
 const TRADES_STORAGE_KEY = 'calendar-journal-trades'
 const USER_STORAGE_KEY = 'tradejournal-user'
@@ -211,10 +212,7 @@ export default function App() {
       <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
         <LoginScreen
           onLoginSuccess={handleLoginSuccess}
-          isConfigured={
-            GOOGLE_CLIENT_ID !== 'PASTE_YOUR_CLIENT_ID_HERE' &&
-            GOOGLE_CLIENT_ID !== 'YOUR_GOOGLE_CLIENT_ID'
-          }
+          isConfigured={true}
         />
       </GoogleOAuthProvider>
     )
