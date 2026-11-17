@@ -47,7 +47,22 @@ function loadUser() {
 
 export default function App() {
   // ── Auth State Management ──────────────────────────────────────
-  const [user, setUser] = useState(loadUser)
+  const [isLoading, setIsLoading] = useState(true)
+  const [user, setUser] = useState(null)
+
+  // ── Initial Auth Check ─────────────────────────────────────────
+  useEffect(() => {
+    try {
+      const storedUser = loadUser()
+      if (storedUser) {
+        setUser(storedUser)
+      }
+    } catch (err) {
+      console.error('Error checking user session:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
 
   // ── Trading Journal States (Synced with Firestore) ─────────────
   const [trades, setTrades] = useState([])
@@ -283,6 +298,15 @@ export default function App() {
       .filter((t) => isSameDay(new Date(t.date + 'T00:00:00'), modalDate))
       .sort((a, b) => b.pnl - a.pnl)
   }, [trades, modalDate])
+
+  // ── Show Full-Screen Loader during Auth Check ──────────────────
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-950">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
+      </div>
+    )
+  }
 
   // ── Render Login Screen if user is not authenticated ──────────
   if (!user) {
