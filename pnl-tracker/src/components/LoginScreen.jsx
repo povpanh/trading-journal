@@ -74,7 +74,7 @@ export default function LoginScreen({ onLoginSuccess }) {
           </div>
         )}
 
-        {/* Google Sign In Button */}
+        {/* Google Sign In Button - Clean layout wrapper without background or extra padding */}
         <div className="flex justify-center w-full">
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
