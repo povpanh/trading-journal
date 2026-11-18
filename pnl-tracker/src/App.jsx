@@ -28,6 +28,7 @@ import TradeModal from './components/TradeModal'
 import WeeklyModal from './components/WeeklyModal'
 import MonthlyHeader from './components/MonthlyHeader'
 import LoginScreen from './components/LoginScreen'
+import SplashScreen from './components/SplashScreen'
 
 // Google OAuth Client ID
 const GOOGLE_CLIENT_ID =
@@ -56,8 +57,10 @@ function loadUser() {
 }
 
 export default function App() {
-  // ── Auth State Management ──────────────────────────────────────
+  // ── Auth & Startup State Management ────────────────────────────
   const [isLoading, setIsLoading] = useState(true)
+  const [showSplash, setShowSplash] = useState(true)
+  const [isSplashFading, setIsSplashFading] = useState(false)
   const [user, setUser] = useState(null)
 
   // ── Initial Auth Check ─────────────────────────────────────────
@@ -73,6 +76,18 @@ export default function App() {
       setIsLoading(false)
     }
   }, [])
+
+  // ── Smooth Splash Screen Fade-out Transition ───────────────────
+  useEffect(() => {
+    if (!isLoading) {
+      // Trigger smooth fade-out animation
+      setIsSplashFading(true)
+      const timer = setTimeout(() => {
+        setShowSplash(false)
+      }, 500) // 500ms matches CSS transition-all duration-500
+      return () => clearTimeout(timer)
+    }
+  }, [isLoading])
 
   // ── Trading Journal States (Synced with Firestore) ─────────────
   const [trades, setTrades] = useState([])
@@ -350,12 +365,12 @@ export default function App() {
       .sort((a, b) => b.pnl - a.pnl)
   }, [trades, modalDate])
 
-  // ── Show Full-Screen Loader during Auth Check ──────────────────
-  if (isLoading) {
+  // ── Render Initial Splash while Auth initializes & user is null ──
+  if (!user && isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-950">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
-      </div>
+      <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+        <SplashScreen isFadingOut={false} />
+      </GoogleOAuthProvider>
     )
   }
 
@@ -367,6 +382,7 @@ export default function App() {
           onLoginSuccess={handleLoginSuccess}
           isConfigured={true}
         />
+        {showSplash && <SplashScreen isFadingOut={isSplashFading} />}
       </GoogleOAuthProvider>
     )
   }
@@ -445,6 +461,9 @@ export default function App() {
           TradeJournal &middot; Authenticated as {user.email || user.name} &middot; Synced with Firebase Cloud Firestore
         </footer>
       </div>
+
+      {/* ── Startup Splash Screen Overlay with Smooth Fade-out ── */}
+      {showSplash && <SplashScreen isFadingOut={isSplashFading} />}
     </GoogleOAuthProvider>
   )
 }
