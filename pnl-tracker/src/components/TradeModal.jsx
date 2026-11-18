@@ -253,6 +253,7 @@ export default function TradeModal({
                       {/* Edit & Delete Action Buttons */}
                       <div className="flex items-center gap-1">
                         <button
+                          type="button"
                           onClick={() => onEdit(t)}
                           className="rounded-lg p-2 sm:p-1.5 text-gray-400 hover:bg-blue-500/15 hover:text-blue-400 transition-colors cursor-pointer"
                           title="Edit Trade"
@@ -260,6 +261,7 @@ export default function TradeModal({
                           <Pencil className="h-4 w-4" />
                         </button>
                         <button
+                          type="button"
                           onClick={() => onDelete(t.id)}
                           className="rounded-lg p-2 sm:p-1.5 text-gray-400 hover:bg-red-500/15 hover:text-red-500 transition-colors cursor-pointer"
                           title="Delete Trade"

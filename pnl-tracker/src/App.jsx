@@ -253,7 +253,7 @@ export default function App() {
   const handleSaveTrade = useCallback(
     async (trade) => {
       if (!user || !user.email) {
-        console.warn('Cannot save trade: user is not logged in or email is missing.')
+        alert('You must be logged in to save trades.')
         return
       }
 
@@ -267,37 +267,56 @@ export default function App() {
       setEditTrade(null)
 
       try {
-        // Direct cloud write to Firestore - local React state updates automatically via real-time onSnapshot listener
         const tradeDocRef = doc(db, 'users', user.email, 'trades', tradeId)
         await setDoc(tradeDocRef, tradeData, { merge: true })
+        setTrades((prev) => {
+          const exists = prev.some((t) => t.id === tradeId)
+          if (exists) {
+            return prev.map((t) => (t.id === tradeId ? tradeData : t))
+          }
+          return [...prev, tradeData]
+        })
       } catch (error) {
         console.error("Firestore Write Failed:", error)
+        alert("Failed to save trade: " + error.message)
       }
     },
     [user?.email]
   )
 
-  const handleDeleteTrade = useCallback(
+  const deleteTrade = useCallback(
     async (id) => {
-      if (!user || !user.email || !id) {
-        console.warn('Cannot delete trade: user is not logged in or trade id is missing.')
+      if (!user || !user.email) {
+        alert('You must be logged in to delete trades.')
         return
       }
 
-      if (editTrade && editTrade.id === id) {
-        setEditTrade(null)
+      if (!id) {
+        console.warn('Cannot delete trade: trade ID is missing.')
+        return
       }
 
+      const tradeId = String(id).trim()
+      const tradeDocRef = doc(db, 'users', user.email, 'trades', tradeId)
+
       try {
-        // Direct cloud write to Firestore - local React state updates automatically via real-time onSnapshot listener
-        const tradeDocRef = doc(db, 'users', user.email, 'trades', id)
+        // Await the Firestore deletion operation before updating local states
         await deleteDoc(tradeDocRef)
+
+        // Update local states after successful deletion
+        setTrades((prev) => prev.filter((t) => t.id !== tradeId && t.id !== id))
+        if (editTrade && (editTrade.id === tradeId || editTrade.id === id)) {
+          setEditTrade(null)
+        }
       } catch (error) {
-        console.error("Firestore Write Failed:", error)
+        console.error("DELETE ERROR:", error)
+        alert("Failed to delete trade: " + error.message)
       }
     },
     [user?.email, editTrade]
   )
+
+  const handleDeleteTrade = deleteTrade
 
   // ── Trades for the active Day Details Modal ───────────────────
   const tradesForModalDate = useMemo(() => {
