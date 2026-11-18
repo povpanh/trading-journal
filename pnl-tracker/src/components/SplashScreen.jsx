@@ -90,3 +90,4 @@ export default function SplashScreen({ isFadingOut = false }) {
     </div>
   )
 }
+
