@@ -41,8 +41,13 @@ function loadUser() {
     const data = localStorage.getItem(USER_STORAGE_KEY)
     if (!data) return null
     const parsed = JSON.parse(data)
-    if (parsed && parsed.email) {
-      parsed.email = parsed.email.trim().toLowerCase()
+    if (parsed) {
+      if (parsed.email) {
+        parsed.email = parsed.email.trim().toLowerCase()
+      }
+      if (!parsed.uid) {
+        parsed.uid = parsed.sub || parsed.email || ''
+      }
     }
     return parsed
   } catch {
@@ -114,8 +119,9 @@ export default function App() {
       tradesCollectionRef,
       (snapshot) => {
         const remoteTrades = snapshot.docs.map((docSnap) => ({
-          id: docSnap.id,
           ...docSnap.data(),
+          id: docSnap.id,
+          docId: docSnap.id,
         }))
         setTrades(remoteTrades)
       },
@@ -125,12 +131,17 @@ export default function App() {
     )
 
     return () => unsubscribe()
-  }, [user?.email])
+  }, [user?.email, user?.uid])
 
   // ── Auth Handlers ──────────────────────────────────────────────
   const handleLoginSuccess = useCallback((profile) => {
-    if (profile && profile.email) {
-      profile.email = profile.email.trim().toLowerCase()
+    if (profile) {
+      if (profile.email) {
+        profile.email = profile.email.trim().toLowerCase()
+      }
+      if (!profile.uid) {
+        profile.uid = profile.sub || profile.email || ''
+      }
     }
     setUser(profile)
   }, [])
@@ -252,12 +263,13 @@ export default function App() {
   // ── Trade CRUD Operations via Firebase Firestore ──────────────
   const handleSaveTrade = useCallback(
     async (trade) => {
-      if (!user || !user.email) {
+      const userKey = (user?.email || user?.uid || '').trim().toLowerCase()
+      if (!user || !userKey) {
         alert('You must be logged in to save trades.')
         return
       }
 
-      const tradeId = trade.id || crypto.randomUUID()
+      const tradeId = trade.id ? String(trade.id).trim() : crypto.randomUUID()
       const tradeData = {
         ...trade,
         id: tradeId,
@@ -267,7 +279,7 @@ export default function App() {
       setEditTrade(null)
 
       try {
-        const tradeDocRef = doc(db, 'users', user.email, 'trades', tradeId)
+        const tradeDocRef = doc(db, 'users', user.email || userKey, 'trades', tradeId)
         await setDoc(tradeDocRef, tradeData, { merge: true })
         setTrades((prev) => {
           const exists = prev.some((t) => t.id === tradeId)
@@ -281,31 +293,43 @@ export default function App() {
         alert("Failed to save trade: " + error.message)
       }
     },
-    [user?.email]
+    [user]
   )
 
   const deleteTrade = useCallback(
-    async (id) => {
-      if (!user || !user.email) {
+    async (target) => {
+      const userKey = (user?.email || user?.uid || '').trim().toLowerCase()
+      if (!user || !userKey) {
         alert('You must be logged in to delete trades.')
         return
       }
 
-      if (!id) {
-        console.warn('Cannot delete trade: trade ID is missing.')
+      // Safely extract trade ID whether passed as string, number, or object
+      let rawId = target
+      if (typeof target === 'object' && target !== null) {
+        rawId = target.id || target.docId || target._id
+      }
+
+      const tradeId = rawId !== undefined && rawId !== null ? String(rawId).trim() : ''
+
+      if (!tradeId || tradeId === 'undefined' || tradeId === '[object Object]') {
+        console.error('DELETE ERROR: Invalid or missing trade ID:', target)
+        alert('Failed to delete trade: Invalid trade ID.')
         return
       }
 
-      const tradeId = String(id).trim()
-      const tradeDocRef = doc(db, 'users', user.email, 'trades', tradeId)
+      // Deletion path: doc(db, 'users', user.email, 'trades', tradeId) or user.uid
+      const tradeDocRef = doc(db, 'users', user.email || userKey, 'trades', tradeId)
 
       try {
         // Await the Firestore deletion operation before updating local states
         await deleteDoc(tradeDocRef)
 
         // Update local states after successful deletion
-        setTrades((prev) => prev.filter((t) => t.id !== tradeId && t.id !== id))
-        if (editTrade && (editTrade.id === tradeId || editTrade.id === id)) {
+        setTrades((prev) =>
+          prev.filter((t) => t.id !== tradeId && t.docId !== tradeId && t.id !== target)
+        )
+        if (editTrade && (editTrade.id === tradeId || editTrade.docId === tradeId)) {
           setEditTrade(null)
         }
       } catch (error) {
@@ -313,7 +337,7 @@ export default function App() {
         alert("Failed to delete trade: " + error.message)
       }
     },
-    [user?.email, editTrade]
+    [user, editTrade]
   )
 
   const handleDeleteTrade = deleteTrade

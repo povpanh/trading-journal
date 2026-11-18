@@ -11,9 +11,11 @@ export default function LoginScreen({ onLoginSuccess }) {
       if (credentialResponse.credential) {
         const decoded = jwtDecode(credentialResponse.credential)
         const rawEmail = decoded.email || ''
+        const email = rawEmail ? rawEmail.trim().toLowerCase() : ''
         const userProfile = {
           name: decoded.name || 'Trader',
-          email: rawEmail ? rawEmail.trim().toLowerCase() : '',
+          email,
+          uid: decoded.sub || email,
           picture: decoded.picture || '',
           given_name: decoded.given_name || '',
           family_name: decoded.family_name || '',
@@ -42,6 +44,7 @@ export default function LoginScreen({ onLoginSuccess }) {
     const demoProfile = {
       name: 'Pro Trader',
       email: 'trader@demo.local',
+      uid: 'demo-user',
       picture: '',
       given_name: 'Pro',
       loginMethod: 'demo',
