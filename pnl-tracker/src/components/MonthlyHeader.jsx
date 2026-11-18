@@ -26,7 +26,7 @@ export default function MonthlyHeader({
   const isProfit = totalPnl > 0
 
   return (
-    <header className="border-b border-gray-800/60 bg-[#0e1219]/95 backdrop-blur-md sticky top-0 z-30">
+    <header className="sticky top-0 z-50 bg-slate-950/80 backdrop-blur-md border-b border-slate-800/50">
       <div className="mx-auto max-w-[1440px] px-3 py-3 sm:px-6 sm:py-4 lg:px-8 space-y-3 sm:space-y-4">
         {/* Row 1: Brand, Month Navigation & User Controls */}
         <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -43,10 +43,10 @@ export default function MonthlyHeader({
           {/* Controls: Month Nav, Today & User Avatar/Logout */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 flex-wrap">
             {/* Month Navigator */}
-            <div className="flex items-center gap-0.5 sm:gap-1 rounded-lg border border-gray-800 bg-[#0a0d13] p-0.5 sm:p-1">
+            <div className="flex items-center gap-0.5 sm:gap-1 rounded-lg border border-slate-800/80 bg-slate-900/50 backdrop-blur-sm p-0.5 sm:p-1">
               <button
                 onClick={onPrev}
-                className="rounded-md p-1.5 text-gray-400 hover:bg-gray-800 hover:text-white transition-colors cursor-pointer active:scale-95"
+                className="rounded-md p-1.5 text-gray-400 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer active:scale-95"
                 title="Previous Month"
                 aria-label="Previous Month"
               >
@@ -57,7 +57,7 @@ export default function MonthlyHeader({
               </span>
               <button
                 onClick={onNext}
-                className="rounded-md p-1.5 text-gray-400 hover:bg-gray-800 hover:text-white transition-colors cursor-pointer active:scale-95"
+                className="rounded-md p-1.5 text-gray-400 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer active:scale-95"
                 title="Next Month"
                 aria-label="Next Month"
               >
@@ -68,14 +68,14 @@ export default function MonthlyHeader({
             {/* Today Button */}
             <button
               onClick={onToday}
-              className="rounded-lg border border-gray-700 bg-transparent px-2.5 py-1.5 text-xs font-semibold text-gray-300 hover:border-emerald-500/50 hover:text-emerald-400 transition-colors cursor-pointer active:scale-95"
+              className="rounded-lg border border-slate-700/80 bg-slate-900/40 backdrop-blur-sm px-2.5 py-1.5 text-xs font-semibold text-gray-300 hover:border-emerald-500/50 hover:text-emerald-400 transition-colors cursor-pointer active:scale-95"
             >
               Today
             </button>
 
             {/* User Profile & Logout */}
             {user && (
-              <div className="flex items-center gap-1.5 sm:gap-2 pl-1 sm:pl-2 border-l border-gray-800">
+              <div className="flex items-center gap-1.5 sm:gap-2 pl-1 sm:pl-2 border-l border-slate-800/80">
                 {user.picture ? (
                   <img
                     src={user.picture}
@@ -98,7 +98,7 @@ export default function MonthlyHeader({
 
                 <button
                   onClick={onLogout}
-                  className="flex items-center gap-1 rounded-lg border border-gray-700/80 bg-[#0a0d13] px-2 sm:px-2.5 py-1.5 text-xs font-semibold text-gray-400 hover:border-red-500/50 hover:bg-red-500/10 hover:text-red-400 transition-colors cursor-pointer active:scale-95"
+                  className="flex items-center gap-1 rounded-lg border border-slate-700/80 bg-slate-900/50 backdrop-blur-sm px-2 sm:px-2.5 py-1.5 text-xs font-semibold text-gray-400 hover:border-red-500/50 hover:bg-red-500/10 hover:text-red-400 transition-colors cursor-pointer active:scale-95"
                   title="Sign out of your account"
                 >
                   <LogOut className="h-3.5 w-3.5" />
@@ -113,12 +113,12 @@ export default function MonthlyHeader({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
           {/* Monthly Net PnL Card */}
           <div
-            className={`flex items-center gap-2 rounded-xl border p-2.5 sm:px-3.5 sm:py-2 transition-colors ${
+            className={`flex items-center gap-2 rounded-xl border p-2.5 sm:px-3.5 sm:py-2 transition-colors backdrop-blur-sm ${
               isLoss
                 ? 'border-red-500/30 bg-red-500/[0.08]'
                 : isProfit
                 ? 'border-emerald-500/30 bg-emerald-500/[0.08]'
-                : 'border-gray-800/80 bg-[#0a0d13]'
+                : 'border-slate-800/80 bg-slate-900/50'
             }`}
           >
             <div className="rounded-lg p-1.5 shrink-0">
@@ -143,7 +143,7 @@ export default function MonthlyHeader({
           </div>
 
           {/* Win Rate Card */}
-          <div className="flex items-center gap-2 rounded-xl border border-gray-800/80 bg-[#0a0d13] p-2.5 sm:px-3.5 sm:py-2">
+          <div className="flex items-center gap-2 rounded-xl border border-slate-800/80 bg-slate-900/50 backdrop-blur-sm p-2.5 sm:px-3.5 sm:py-2">
             <div className="rounded-lg p-1.5 shrink-0 text-amber-400">
               <Target className="h-4 w-4" />
             </div>
@@ -158,7 +158,7 @@ export default function MonthlyHeader({
           </div>
 
           {/* Trades Count Card */}
-          <div className="flex items-center gap-2 rounded-xl border border-gray-800/80 bg-[#0a0d13] p-2.5 sm:px-3.5 sm:py-2">
+          <div className="flex items-center gap-2 rounded-xl border border-slate-800/80 bg-slate-900/50 backdrop-blur-sm p-2.5 sm:px-3.5 sm:py-2">
             <div className="rounded-lg p-1.5 shrink-0 text-blue-400">
               <BarChart3 className="h-4 w-4" />
             </div>
@@ -173,7 +173,7 @@ export default function MonthlyHeader({
           </div>
 
           {/* Active Days Card */}
-          <div className="flex items-center gap-2 rounded-xl border border-gray-800/80 bg-[#0a0d13] p-2.5 sm:px-3.5 sm:py-2">
+          <div className="flex items-center gap-2 rounded-xl border border-slate-800/80 bg-slate-900/50 backdrop-blur-sm p-2.5 sm:px-3.5 sm:py-2">
             <div className="rounded-lg p-1.5 shrink-0 text-violet-400">
               <Activity className="h-4 w-4" />
             </div>

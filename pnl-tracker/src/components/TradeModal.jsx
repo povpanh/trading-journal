@@ -134,7 +134,7 @@ export default function TradeModal({
     'w-full rounded-xl border border-gray-700 bg-[#0a0d13] px-3.5 py-3 text-base sm:text-sm text-gray-100 placeholder-gray-500 outline-none transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30'
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-2.5 sm:p-4">
       {/* Dark blur backdrop */}
       <div
         className="absolute inset-0 bg-black/80 backdrop-blur-md transition-opacity"
